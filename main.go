@@ -1,8 +1,7 @@
 /*
     Generating a BTC address using Go.
-    Basically copied line-by-line from Ken Sherriff's blog post, "Bitcoins the hard way"
-    and converted to Go.
-
+    Inspired by Ken Sherriff's blog post, "Bitcoins the hard way".
+    
     Obviously do not actually use this to generate your BTC address as the random method
     is not cryptographically strong.
 */
@@ -22,7 +21,7 @@ import (
 
 func main() {
     //So far this is only a raw private key, not a WIF private key
-    rand.Seed( time.Now().UTC().UnixNano())
+    rand.Seed(time.Now().UTC().UnixNano())
     privateKey := randomBytes(32)
     fmt.Println(strings.ToUpper(hex.EncodeToString(privateKey)))
     //privateKeyInt := big.NewInt(0)
@@ -33,7 +32,7 @@ func main() {
 func randomBytes(l int ) []byte {
     bytes := make([]byte, l)
     for i:=0 ; i<l ; i++ {
-        bytes[i] = byte(randInt(6,math.MaxInt8))
+        bytes[i] = byte(randInt(0,math.MaxInt8))
     }
     return bytes
 }
