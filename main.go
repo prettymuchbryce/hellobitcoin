@@ -30,7 +30,6 @@ func main() {
     extendedPrivateKey := make([]byte, 33)
     extendedPrivateKey[0] = prefixBytes[0]
     for i:=1 ; i<33 ; i++ {
-        //This is not "cryptographically random"
         extendedPrivateKey[i] = privateKey[i-1]
     }
 
