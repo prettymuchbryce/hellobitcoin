@@ -1,16 +1,16 @@
 Ultimately I would like to be able to generate a BTC wallet, and send a transaction over the bitcoin test network (TestNet) using golang.
 
-# Dependencies
+#### Dependencies
 
 * https://github.com/haltingstate/secp256k1-go
 
-# Other libraries I've used
+#### Other libraries I've used
 
 * https://github.com/tv42/base58
 
-# Notes
+#### Notes
 
-## Generating a private key
+##### Generating a private key
 
 via https://en.bitcoin.it/wiki/Wallet_import_format
 
@@ -29,11 +29,11 @@ via https://en.bitcoin.it/wiki/Wallet_import_format
 * Convert the result from a byte string into a base58 string using Base58Check encoding. This is the Wallet Import Format
 `5HueCGU8rMjxEXxiPuD5BDku4MkFqeZyd4dZ1jvhTVqvbTLvyTJ`
 
-## Generating a public key from a private key
+##### Generating a public key from a private key
 
 ![](http://i.stack.imgur.com/N93Nn.png)
 
-## Resources
+##### Resources
 
 - Ken Shirriff's blog post "Bitcoins the hard way": http://www.righto.com/2014/02/bitcoins-hard-way-using-raw-bitcoin.html
 - the Bitcoin wiki: https://en.bitcoin.it/
