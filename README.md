@@ -36,5 +36,6 @@ via https://en.bitcoin.it/wiki/Wallet_import_format
 ##### Resources
 
 - Ken Shirriff's blog post "Bitcoins the hard way": http://www.righto.com/2014/02/bitcoins-hard-way-using-raw-bitcoin.html
-- the Bitcoin wiki: https://en.bitcoin.it/
+- The Bitcoin wiki: https://en.bitcoin.it/
+- Bitcoin developer guide: https://bitcoin.org/en/developer-guide
 - Lots of googling

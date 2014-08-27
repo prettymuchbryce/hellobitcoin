@@ -21,52 +21,39 @@ func main() {
 
     //Multiple steps follow. I've encapsulated this functionality into
     //the base58CheckEncode method because a similar process is used to generate
-    //a readable public key later on, but here are the steps.
+    //a readable public key as well. Here are the steps for the private key.
 
     //First generate "extended" private key from private key
     //The difference between a private key and an extended
-    //private key is this prefix, which determines which
-    //network the key is of (real btc network, or test network)
+    //private key is this prefix, which determines the
+    //network the key belongs to (real btc network, or test network)
 
     //EF is the testnet prefix
     //80 is the mainnet prefix
 
     //Perform SHA-256 on the extended key twice
-    //First 4 bytes if this double-sha'd byte array is the checksum
+    //First 4 bytes if this double-sha'd byte array are the checksum
     //Append this checksum to the extended private key
     //Convert the extended private key to a big Int
     //Encoded the big int extended private key into a Base58Checked string
 
-    buf := base58CheckEncode("EF", privateKey)
+    privateKeyWif := base58CheckEncode("EF", privateKey)
 
-    //Print the private key in Wallet Import Format
-    fmt.Println("---")
-    fmt.Println("Your private key is")
-    fmt.Println(buf)
-
-    //Generate the public key from the private key
-    //Unfortunately golang ecdsa package does not include a
-    //secp256k1 curve as this is fairly specific to bitcoin
-    //as I understand it, so I have used this one by haltingstate.
-    publicKeyBytes := secp256k1.UncompressedPubkeyFromSeckey(privateKey)
-
-    //ripemd160(sha256(publicKeyBytes))
-    shaHash := sha256.New()
-    shaHash.Write(publicKeyBytes)
-    shadPublicKeyBytes := shaHash.Sum(nil)
-
-    ripeHash := ripemd160.New()
-    ripeHash.Write(shadPublicKeyBytes)
-    ripeHashedBytes := ripeHash.Sum(nil)
+    publicKey := generatePublicKey(privateKey)
 
     //There is also a prefix on the public key
     //This is known as the Network ID Byte, or the version byte
     //6f is the testnet prefix
     //00 is the mainnet prefix
-    buf2 := base58CheckEncode("6F", ripeHashedBytes)
+    publicKeyEncoded := base58CheckEncode("6F", publicKey)
+
+    //Print the keys
+    fmt.Println("---")
+    fmt.Println("Your private key is")
+    fmt.Println(privateKeyWif)
 
     fmt.Println("Your public key is")
-    fmt.Println(buf2)
+    fmt.Println(publicKeyEncoded)
 }
 
 func base58CheckEncode(prefix string, byteData []byte) string {
@@ -112,12 +99,12 @@ func base58CheckEncode(prefix string, byteData []byte) string {
     bigIntEncodedChecksum := big.NewInt(0)
     bigIntEncodedChecksum.SetBytes(encodedChecksum)
 
-    //Encoded the big int checksum'd version into a Base58Checked string
+    //Encode the big int checksum'd version into a Base58Checked string
     base58EncodedChecksum := string(base58.EncodeBig(nil, bigIntEncodedChecksum))
 
     //Now for each zero byte we counted above we need to prepend a 1 to our
-    //base58 encoded string. The reasoning behind this is that base58 removes 0's (0x00).
-    //So we add leading 0s back on as 1s.
+    //base58 encoded string. The rational behind this is that base58 removes 0's (0x00).
+    //So bitcoin demands we add leading 0s back on as 1s.
     var buffer bytes.Buffer
     for i := 0; i < zeroBytes; i++ {
         buffer.WriteString("1")
@@ -126,6 +113,26 @@ func base58CheckEncode(prefix string, byteData []byte) string {
     buffer.WriteString(base58EncodedChecksum)
 
     return buffer.String()
+}
+
+func generatePublicKey(privateKey []byte) []byte {
+    //Generate the public key from the private key.
+    //Unfortunately golang ecdsa package does not include a
+    //secp256k1 curve as this is fairly specific to bitcoin
+    //as I understand it, so I have used this one by haltingstate.
+    publicKeyBytes := secp256k1.UncompressedPubkeyFromSeckey(privateKey)
+
+    //Next we get a sha256 hash of the public key generated
+    //via ECDSA, and then get a ripemd160 hash of the sha256 hash.
+    shaHash := sha256.New()
+    shaHash.Write(publicKeyBytes)
+    shadPublicKeyBytes := shaHash.Sum(nil)
+
+    ripeHash := ripemd160.New()
+    ripeHash.Write(shadPublicKeyBytes)
+    ripeHashedBytes := ripeHash.Sum(nil)
+
+    return ripeHashedBytes
 }
 
 func generatePrivateKey() []byte {
