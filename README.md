@@ -1,12 +1,19 @@
 Ultimately I would like to be able to generate a BTC wallet, and send a transaction over the bitcoin test network (TestNet) using golang.
 
+This is a work in progress, and isn't yet fully functional.
+
+#### Instructions
+
+##### Creating a key pair
+
+`go run keys.go`
+
+##### Generating a transaction
+
+
 #### Dependencies
 
 * https://github.com/haltingstate/secp256k1-go
-
-#### Other libraries I've used
-
-* https://github.com/tv42/base58
 
 #### Notes
 
@@ -35,7 +42,10 @@ via https://en.bitcoin.it/wiki/Wallet_import_format
 
 ##### Resources
 
+- https://github.com/tv42/base58 I have included the base58 project in this codebase rather than importing it from the aforementioned github, because I needed to change the dictionary that was used.
 - Ken Shirriff's blog post "Bitcoins the hard way": http://www.righto.com/2014/02/bitcoins-hard-way-using-raw-bitcoin.html
 - The Bitcoin wiki: https://en.bitcoin.it/
 - Bitcoin developer guide: https://bitcoin.org/en/developer-guide
-- Lots of googling
+- TP's TestNet Faucet. This allows you to give yourself BTC on TestNet. http://tpfaucet.appspot.com/ (make sure to send them back when you're done.)
+- http://blockexplorer.com/testnet Has information about transactions on TestNet.
+- bitcoin.stackexchange.com (http://bitcoin.stackexchange.com/questions/3374/how-to-redeem-a-basic-tx) Information on redeeming a raw transaction, and explanation of fields.

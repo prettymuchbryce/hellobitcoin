@@ -11,7 +11,7 @@ import (
     "encoding/hex"
     "math/big"
     secp256k1 "github.com/haltingstate/secp256k1-go"
-    "gotestcoin/base58"
+    "hellobitcoin/base58"
     "math/rand"
 )
 
@@ -41,11 +41,13 @@ func main() {
 
     publicKey := generatePublicKey(privateKey)
 
+    fmt.Println(hex.EncodeToString(publicKey))
+
     //There is also a prefix on the public key
     //This is known as the Network ID Byte, or the version byte
     //6f is the testnet prefix
     //00 is the mainnet prefix
-    publicKeyEncoded := base58CheckEncode("6F", publicKey)
+    publicKeyEncoded := base58CheckEncode("6f", publicKey)
 
     //Print the keys
     fmt.Println("---")
