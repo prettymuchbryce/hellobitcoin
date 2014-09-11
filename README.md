@@ -6,7 +6,7 @@ This is a work in progress, and isn't yet fully functional.
 
 ##### Creating a key pair
 
-`go run keys.go`
+`go run keys.go base58check.go`
 
 ##### Generating a transaction
 
