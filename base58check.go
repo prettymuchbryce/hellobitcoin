@@ -97,9 +97,7 @@ func base58CheckDecode(value string) []byte {
 		buffer.WriteByte(zeroByte[0])
 	}
 
-	for i := 0; i < len(encoded); i++ {
-		buffer.WriteByte(encoded[i])
-	}
+	buffer.Write(encoded)
 
 	return buffer.Bytes()
 }
