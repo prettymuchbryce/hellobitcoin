@@ -11,9 +11,10 @@ import (
     "math"
    // "io/ioutil"
     //"io"
+    "os"
     "math/rand"
     "net"
-    "bufio"
+    //"bufio"
     "bytes"
     "time"
     //"log"
@@ -21,43 +22,79 @@ import (
     "crypto/sha256"
     //secp256k1 "github.com/haltingstate/secp256k1-go"
 )
-
-//0xDAB5BFFA <-- magic for testnet
+//0xDAB5BFFA <-- magic for testnet or FABFB5DA or 0B110907 or 0709110b
 //0xd9b4bef9 <-- magic for mainnet
 //https://en.bitcoin.it/wiki/Protocol_specification#Message_types
 
 //54.210.107.2:18333
 
+var address string = "54.210.107.2"
+
 func main() {
+
+
     //var transaction string
     //flag.StringVar(&transaction, "transaction", "", "")
     //flag.Parse()
 
-    conn, err := net.Dial("tcp", "95.85.39.28:18333")
+    bufaddr := new(bytes.Buffer)
+    bufaddr.WriteString(address)
+    bufaddr.WriteString(":18333")
+
+
+    servAddr := bufaddr.String()
+    tcpAddr, err := net.ResolveTCPAddr("tcp", servAddr)
+    if err != nil {
+        println("ResolveTCPAddr failed:", err.Error())
+        os.Exit(1)
+    }
+
+    conn, err := net.DialTCP("tcp", nil, tcpAddr)
     if err != nil {
         fmt.Println(err)
         // handle error
     }
 
-    versionMessage := makeMessage("DAB5BFFA", "version", getVersionMessage())
+    versionMessage := makeMessage("0709110b", "version", getVersionMessage())
+
     n, err := conn.Write(versionMessage)
     if err != nil {
         fmt.Println(err,n)
         // handle error
     }
 
+
+   /* status, err := bufio.NewReader(conn).ReadString('\n')
+    if err != nil {
+        fmt.Println(err)
+        // handle error
+    }*/
+
+    fmt.Println(n)
+
     fmt.Println(hex.EncodeToString(versionMessage))
 
-    fmt.Println(bufio.NewReader(conn).ReadByte())
+    reply := make([]byte, 1024)
+ 
+    _, err = conn.Read(reply)
+    if err != nil {
+        println("Write to server failed:", err.Error())
+        os.Exit(1)
+    }
 
-    /*fmt.Println(n)
-    var buf bytes.Buffer
+    fmt.Println("reply from server=", string(reply))
+
+    conn.Close()
+   // fmt.Println(bufio.NewReader(conn).ReadByte())
+
+    //fmt.Println(n)
+    /*var buf bytes.Buffer
     io.Copy(&buf, conn)
     response := make([]byte, buf.Len())
-    conn.Read(response)*/
+    conn.Read(response)
 
-//    fmt.Println(buf.Len())
-  //  fmt.Println(response)
+    fmt.Println(buf.Len())
+    fmt.Println(response)*/
 }
 
 func makeMessage(magic string, command string, payload []byte) []byte {
@@ -92,11 +129,13 @@ func makeMessage(magic string, command string, payload []byte) []byte {
     buffer := new(bytes.Buffer)
     //buffer.Write(magicBytes)
     binary.Write(buffer, binary.LittleEndian, magicBytes)
-    binary.Write(buffer, binary.LittleEndian, magicBytes)
-    buffer.Write(commandBytes)
+    binary.Write(buffer, binary.LittleEndian, commandBytes)
     buffer.Write(lengthBytes)
-    buffer.Write(checksum)
+       // binary.Write(buffer, binary.LittleEndian, commandBytes)
+
+    binary.Write(buffer, binary.LittleEndian, checksum)
     buffer.Write(payload)
+    //binary.Write(buffer, binary.LittleEndian, payload)
     return buffer.Bytes()
 }
 
@@ -112,7 +151,7 @@ func getNetworkAddress(ip string) []byte {
     ipv4Strings := strings.Split(ip, ".")
     ipv4Bytes := make([]byte, 4)
 
-    for i := 3; i >= 0; i-- {
+    for i := 0; i < 4; i++ {
         ipByte, err := strconv.Atoi(ipv4Strings[i])
         if err != nil {
             fmt.Println(err)
@@ -121,21 +160,21 @@ func getNetworkAddress(ip string) []byte {
         ipv4Bytes[i] = byte(ipByte)
     }
 
-    var ipv64 bytes.Buffer
+    ipv64 := new(bytes.Buffer)
     prefix, err := hex.DecodeString("00000000000000000000FFFF")
     if err != nil {
         fmt.Println(err)
     }
     ipv64.Write(prefix)
-    ipv64.Write(ipv4Bytes)
+    binary.Write(ipv64, binary.BigEndian, ipv4Bytes)
 
     port := make([]byte, 2)
     binary.BigEndian.PutUint16(port, uint16(18333))
 
-    var networkAddressBuffer bytes.Buffer
-
-    //networkAddressBuffer.Write(timestamp)
-    networkAddressBuffer.Write(services)
+    networkAddressBuffer := new(bytes.Buffer)
+//    networkAddressBuffer.Write(timestamp)
+    binary.Write(networkAddressBuffer, binary.LittleEndian, services)
+    //networkAddressBuffer.Write(services)
     networkAddressBuffer.Write(ipv64.Bytes())
     networkAddressBuffer.Write(port)
 
@@ -154,9 +193,13 @@ func getVersionMessage() []byte {
     }
 
     timestamp := make([]byte, 8)
-    binary.PutVarint(timestamp, int64(time.Now().Unix()))
+    binary.LittleEndian.PutUint64(timestamp, uint64(time.Now().Unix()))
 
-    fmt.Println(time.Now().Unix())
+//    timestamp := make([]byte, 8)
+ //   binary.PutVarint(timestamp, time.Now().Unix())
+
+   // fmt.Println(b.Bytes())
+    fmt.Println(hex.EncodeToString(timestamp))
 
     /*
     addrs, err := net.InterfaceAddrs()
@@ -174,7 +217,7 @@ func getVersionMessage() []byte {
         }
     }*/
 
-    addrRecv := getNetworkAddress("95.85.39.28")
+    addrRecv := getNetworkAddress(address)
     addrFrom := getNetworkAddress("76.102.229.234") //me
 
     nonce := make([]byte, 8)
@@ -193,14 +236,13 @@ func getVersionMessage() []byte {
     }
 
 
-    var buffer bytes.Buffer
-
-    buffer.Write(version)
-    buffer.Write(services)
+    buffer := new(bytes.Buffer)
+    binary.Write(buffer, binary.LittleEndian, version)
+    binary.Write(buffer, binary.LittleEndian, services)
     buffer.Write(timestamp)
     buffer.Write(addrRecv)
     buffer.Write(addrFrom)
-    buffer.Write(nonce)
+    binary.Write(buffer, binary.LittleEndian, nonce)
     buffer.Write(userAgent)
     buffer.Write(startHeight)
 
