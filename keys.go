@@ -55,7 +55,7 @@ func generatePublicKey(privateKeyBytes []byte) []byte {
 	//Generate the public key from the private key.
 	//Unfortunately golang ecdsa package does not include a
 	//secp256k1 curve as this is fairly specific to bitcoin
-	//as I understand it, so I have used this one by haltingstate.
+	//as I understand it, so I have used this one by toxeus which wraps the official bitcoin/c-secp256k1 with cgo.
 	var privateKeyBytes32 [32]byte
 	for i := 0; i < 32; i++ {
 		privateKeyBytes32[i] = privateKeyBytes[i]
