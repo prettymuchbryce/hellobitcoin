@@ -1,78 +1,98 @@
 package main
 
 import (
-	"flag"
 	"bytes"
+	"crypto/sha256"
 	"encoding/binary"
 	"encoding/hex"
+	"flag"
 	"fmt"
+	secp256k1 "github.com/toxeus/go-secp256k1"
 	"log"
-	"crypto/sha256"
-	secp256k1 "github.com/haltingstate/secp256k1-go"
+	"math"
+	"math/rand"
+	"time"
 )
 
+var flagPrivateKey string
+var flagPublicKey string
+var flagDestination string
+var flagInputTransaction string
+var flagSatoshis int
+
 func main() {
-	/*var inputTransactionHash string
-	  var publicKeyBase58 string
-	  var publicKeyBase58Destination string
-	  var inputTransactionOutputIndex int
-	  var satoshis int
+	//This transaction code is not completely robust.
+	//It expects that you have exactly 1 input transaction, and 1 output transaction.
+	//It also expects that your transaction is a standard Pay To Public Key Hash (P2PKH) transaction.
+	//This is the most common form used to send a transaction to one or multiple Bitcoin addresses.
 
-	  flag.StringVar(&inputTransactionHash, "input", "", "The hexidecimal value of the hashed transaction input")
-	  flag.StringVar(&publicKeyBase58, "pubkey", "", "Your public key in base58 format")
-	  flag.StringVar(&publicKeyBase58Destination, "destination", "", "The destination public key in base58 format")
-
-	  flag.IntVar(&inputTransactionOutputIndex, "outputIndex", 0, "The index of the source transaction output you wish to use as input for this transaction")
-	  flag.IntVar(&satoshis, "value", 0, "The number of satoshis you wish to send (the remainder will be given as a mining fee)")
-
-	  flag.Parse()
-
-	  createRawTransaction(inputTransactionHash, publicKeyBase58, publicKeyBase58Destination, inputTransactionOutputIndex, satoshis)*/
-
-	var privateKey string
-	flag.StringVar(&privateKey, "private-key", "", "")
+	//Parse flags
+	flag.StringVar(&flagPrivateKey, "private-key", "", "")
+	flag.StringVar(&flagPublicKey, "public-key", "", "")
+	flag.StringVar(&flagDestination, "destination", "", "")
+	flag.StringVar(&flagInputTransaction, "input-transaction", "", "")
+	flag.IntVar(&flagSatoshis, "satoshis", 0, "")
 	flag.Parse()
 
+	//First we create the raw transaction.
+	//In order to construct the raw transaction we need the input transaction hash,
+	//the destination address, the number of satoshis to send, and the scriptSig
+	//which is temporarily (prior to signing), the ScriptPubKey of the input transaction.
+	tempScriptSig := createScriptPubKey(flagPublicKey)
 
-	publicKeyBytes := base58CheckDecode("mujf6HNVrAFUX2gjNgirTWyxaT7XzeKUrj")
+	rawTransaction := createRawTransaction(flagInputTransaction, flagDestination, flagSatoshis, tempScriptSig)
 
-	//SCRIPT SIG (TEMPORARILY SCRIPTPUBKEY OF INPUT) + LENGTH
-	scriptSigLength := 4 + len(publicKeyBytes)
-	scriptSig := make([]byte, scriptSigLength)
-
-	scriptSig[0] = 118 //OP_DUP
-	scriptSig[1] = 169 //OP_HASH160
-	for i := 2; i < scriptSigLength-2; i++ {
-		scriptSig[i] = publicKeyBytes[i-2]
-	}
-	scriptSig[scriptSigLength-2] = 136 //OP_EQUALVERIFY
-	scriptSig[scriptSigLength-1] = 172 //OP_CHECKSIG
-
-
-	rawTransaction := createRawTransaction("7756bf4ed3b495adb63e05c02398e799c471b885d10523028b6e1b10f0ae181f", "msj42CCGruhRsFrGATiUuh25dtxYtnpbTx", 1, 25000000, scriptSig)
-
-	//HASHCODETYPE
+	//After completing the raw transaction, we append
+	//SIGHASH_ALL in little-endian format to the end of the raw transaction.
 	hashCodeType, err := hex.DecodeString("01000000")
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	rawTransactionWithHashCodeType := append(rawTransaction, hashCodeType[0])
+	var rawTransactionBuffer bytes.Buffer
+	rawTransactionBuffer.Write(rawTransaction)
+	rawTransactionBuffer.Write(hashCodeType)
+	rawTransactionWithHashCodeType := rawTransactionBuffer.Bytes()
 
-	finalTransaction := signRawTransaction(rawTransactionWithHashCodeType, privateKey, "mujf6HNVrAFUX2gjNgirTWyxaT7XzeKUrj")
-	
-	//HASHCODETYPE
+	//Sign the raw transaction, and output it to the console.
+	finalTransaction := signRawTransaction(rawTransactionWithHashCodeType, flagPrivateKey)
 	finalTransactionHex := hex.EncodeToString(finalTransaction)
 
 	fmt.Println("Your final transaction is")
 	fmt.Println(finalTransactionHex)
 }
 
-func signRawTransaction(rawTransaction []byte, privateKeyBase58 string, publicKeyBase58 string) []byte {
+func createScriptPubKey(publicKeyBase58 string) []byte {
 	publicKeyBytes := base58CheckDecode(publicKeyBase58)
-	privateKeyBytes := base58CheckDecode(privateKeyBase58)
 
-	//Perform SHA-256 twice
+	var scriptPubKey bytes.Buffer
+	scriptPubKey.WriteByte(byte(118))                 //OP_DUP
+	scriptPubKey.WriteByte(byte(169))                 //OP_HASH160
+	scriptPubKey.WriteByte(byte(len(publicKeyBytes))) //PUSH
+	scriptPubKey.Write(publicKeyBytes)
+	scriptPubKey.WriteByte(byte(136)) //OP_EQUALVERIFY
+	scriptPubKey.WriteByte(byte(172)) //OP_CHECKSIG
+	return scriptPubKey.Bytes()
+}
+
+func signRawTransaction(rawTransaction []byte, privateKeyBase58 string) []byte {
+	//Here we start the process of signing the raw transaction.
+
+	secp256k1.Start()
+	privateKeyBytes := base58CheckDecode(privateKeyBase58)
+	var privateKeyBytes32 [32]byte
+
+	for i := 0; i < 32; i++ {
+		privateKeyBytes32[i] = privateKeyBytes[i]
+	}
+
+	//Get the raw public key
+	publicKeyBytes, success := secp256k1.Pubkey_create(privateKeyBytes32, false)
+	if !success {
+		log.Fatal("Failed to convert private key to public key")
+	}
+
+	//Hash the raw transaction twice before the signing
 	shaHash := sha256.New()
 	shaHash.Write(rawTransaction)
 	var hash []byte = shaHash.Sum(nil)
@@ -81,98 +101,116 @@ func signRawTransaction(rawTransaction []byte, privateKeyBase58 string, publicKe
 	shaHash2.Write(hash)
 	rawTransactionHashed := shaHash2.Sum(nil)
 
-	signedTransaction := secp256k1.Sign(rawTransactionHashed, privateKeyBytes)
+	//Sign the raw transaction
+	signedTransaction, success := secp256k1.Sign(rawTransactionHashed, privateKeyBytes32, generateNonce())
+	if !success {
+		log.Fatal("Failed to sign transaction")
+	}
+
+	//Verify that it worked.
+	verified := secp256k1.Verify(rawTransactionHashed, signedTransaction, publicKeyBytes)
+	if !verified {
+		log.Fatal("Failed to sign transaction")
+	}
+
+	secp256k1.Stop()
 
 	hashCodeType, err := hex.DecodeString("01")
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	signedTransactionWithHashCodeType := append(signedTransaction, hashCodeType[0])
+	//+1 for hashCodeType
+	signedTransactionLength := byte(len(signedTransaction) + 1)
 
-	signedTransactionWithHashCodeTypeLength := byte(len(signedTransactionWithHashCodeType))
-
-	pubKeyLength := byte(len(publicKeyBytes))
+	var publicKeyBuffer bytes.Buffer
+	publicKeyBuffer.Write(publicKeyBytes)
+	pubKeyLength := byte(len(publicKeyBuffer.Bytes()))
 
 	var buffer bytes.Buffer
-	buffer.WriteByte(signedTransactionWithHashCodeTypeLength)
-	buffer.Write(signedTransactionWithHashCodeType)
+	buffer.WriteByte(signedTransactionLength)
+	buffer.Write(signedTransaction)
+	buffer.WriteByte(hashCodeType[0])
 	buffer.WriteByte(pubKeyLength)
-	buffer.Write(publicKeyBytes)
+	buffer.Write(publicKeyBuffer.Bytes())
 
 	scriptSig := buffer.Bytes()
 
-	return createRawTransaction("7756bf4ed3b495adb63e05c02398e799c471b885d10523028b6e1b10f0ae181f", "msj42CCGruhRsFrGATiUuh25dtxYtnpbTx", 1, 25000000, scriptSig)
-
-	//add 01 byte
+	//Return the final transaction
+	return createRawTransaction(flagInputTransaction, flagDestination, flagSatoshis, scriptSig)
 }
 
-func createRawTransaction(inputTransactionHash string, publicKeyBase58Destination string, inputTransactionOutputIndex int, satoshis int, scriptSig []byte) []byte {
-	//VERSION FIELD
+func generateNonce() [32]byte {
+	var bytes [32]byte
+	for i := 0; i < 32; i++ {
+		//This is not "cryptographically random"
+		bytes[i] = byte(randInt(0, math.MaxUint8))
+	}
+	return bytes
+}
+
+func randInt(min int, max int) uint8 {
+	rand.Seed(time.Now().UTC().UnixNano())
+	return uint8(min + rand.Intn(max-min))
+}
+
+func createRawTransaction(inputTransactionHash string, publicKeyBase58Destination string, satoshis int, scriptSig []byte) []byte {
+	//Create the raw transaction.
+
+	//Version field
 	version, err := hex.DecodeString("01000000")
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	//# of INPUTS
+	//# of inputs (always 1 in our case)
 	inputs, err := hex.DecodeString("01")
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	//Reversed Transaction Input
-	inputTransactionBytes, err := hex.DecodeString(inputTransactionHash) //this should be reversed ?
+	//Input transaction hash
+	inputTransactionBytes, err := hex.DecodeString(inputTransactionHash)
 	if err != nil {
 		log.Fatal(err)
 	}
 
+	//Convert input transaction hash to little-endian form
 	inputTransactionBytesReversed := make([]byte, len(inputTransactionBytes))
-	j := 0
-	for i := len(inputTransactionBytes) - 1; i > 0; i-- {
-		inputTransactionBytesReversed[j] = inputTransactionBytes[i]
-		j++
+	for i := 0; i < len(inputTransactionBytes); i++ {
+		inputTransactionBytesReversed[i] = inputTransactionBytes[len(inputTransactionBytes)-i-1]
 	}
 
-	//OUTPUT INDEX OF REFERENCED TRANSACTION
-	outputIndex, err := hex.DecodeString("01000000")
+	//Ouput index of input transaction
+	outputIndex, err := hex.DecodeString("00000000")
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	//SCRIPT SIG (TEMPORARILY SCRIPTPUBKEY OF INPUT) + LENGTH
+	//Script sig length
 	scriptSigLength := len(scriptSig)
 
-	//SEQUENCE
-	sequence, err := hex.DecodeString("ffffff")
+	//sequence_no. Normally 0xFFFFFFFF. Always in this case.
+	sequence, err := hex.DecodeString("ffffffff")
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	//NUMBER OF OUTPUTS
+	//Numbers of outputs for the transaction being created. Always one in this example.
 	numOutputs, err := hex.DecodeString("01")
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	//SATOSHIS TO SEND
+	//Satoshis to send.
 	satoshiBytes := make([]byte, 8)
 	binary.LittleEndian.PutUint64(satoshiBytes, uint64(satoshis))
 
-	publicKeyDestinationBytes := base58CheckDecode(publicKeyBase58Destination)
+	//Script pub key
+	scriptPubKey := createScriptPubKey(publicKeyBase58Destination)
+	scriptPubKeyLength := len(scriptPubKey)
 
-	//SCRIPTPUBKEY + LENGTH
-	scriptPubKeyLength := 4 + len(publicKeyDestinationBytes)
-	scriptPubKey := make([]byte, scriptPubKeyLength)
-
-	scriptPubKey[0] = 118 //OP_DUP
-	scriptPubKey[1] = 169 //OP_HASH160
-	for i := 2; i < scriptPubKeyLength-2; i++ {
-		scriptPubKey[i] = publicKeyDestinationBytes[i-2]
-	}
-	scriptPubKey[scriptPubKeyLength-2] = 136 //OP_EQUALVERIFY
-	scriptPubKey[scriptPubKeyLength-1] = 172 //OP_CHECKSIG
-
-	//LOCKTIMEFIELD
+	//Lock time field
 	lockTimeField, err := hex.DecodeString("00000000")
 	if err != nil {
 		log.Fatal(err)
@@ -193,18 +231,4 @@ func createRawTransaction(inputTransactionHash string, publicKeyBase58Destinatio
 	buffer.Write(lockTimeField)
 
 	return buffer.Bytes()
-
-	//four byte version field
-	//one byte for # of inputs
-	//32 byte hash of thee transaction for which want to redeem an output 7756bf4ed3b495adb63e05c02398e799c471b885d10523028b6e1b10f0ae181f
-	//four byte field denoting the output index (01000000)
-	//script sig lengh (1 byte)
-	//script sig (24 bytes) OP_DUP OP_HASH160 9bf8cee4ce4532eab13454490dbdfb346d5e37f8 OP_EQUALVERIFY OP_CHECKSIG
-	//four byte field which is always 0xfffffff (lol?)
-	//1 byte varint containg number of outputs (01)
-	//8 byte field containing the amount we want to redeem (left over is for miners)
-	//1 byte for output script size
-	//24 bytes for actual script OP_DUP OP_HASH160 9bf8cee4ce4532eab13454490dbdfb346d5e37f8 OP_EQUALVERIFY OP_CHECKSIG (NOT BASE 58.. need to decode FUUUUU)
-	//four byte "lock time" field ? 0x00000000
-	//four byte hashcode type. 0x00000001
 }

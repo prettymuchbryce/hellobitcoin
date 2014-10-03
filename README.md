@@ -1,51 +1,61 @@
-Ultimately I would like to be able to generate a BTC wallet, and send a transaction over the bitcoin test network (TestNet) using golang.
+###Overview
 
-This is a work in progress, and isn't yet fully functional.
+This is a collection of simple programs which can generate bitcoin wallets, create and sign transactions, and send transactions over the bitcoin network.
 
-#### Instructions
+It was a learning project for me to learn more about both golang, and the bitcoin protocol.
+
+###Disclaimer
+
+These programs is not "crytographically" random, and should not be used for purpose other than educational use.
+
+###Installation
+
+1. Install [go](http://golang.org/)
+2. run `go get` to install dependencies
+3. Follow the instructions at [go-secp256k1](https://github.com/toxeus/go-secp256k1) to compile bitcoin/c-secp256k1
+4. Run one of the programs using the syntax below
+
+### Usage
 
 ##### Creating a key pair
 
-`go run keys.go base58check.go`
+	go run keys.go base58check.go
 
 ##### Generating a transaction
 
+	go run transaction.go base58check.go
+	
+	options (all are required)
+	--private-key yourPrivateKey
+	--public-key yourPublicKey
+	--destination destinationPublicKey
+	--input-transaction inputTransactionHash
+	--satoshis satoshisToSend
 
-#### Dependencies
 
-* https://github.com/haltingstate/secp256k1-go
+##### Sending a transaction over the bitcoin network
 
-#### Notes
+	go run network.go
+	
+	options (all are required)
+	--transaction yourTransaction
+	--node-address 255.255.255.255 (IPv4 address of the bitcoin node to connect to)
+	--network-address 255.255.255.255 (IPv4 address of your public IP address)
 
-##### Generating a private key
+### Dependencies
 
-via https://en.bitcoin.it/wiki/Wallet_import_format
+##### https://github.com/toxeus/go-secp256k1
+This library is used for the creation of public keys from private keys, as well as signing transactions. It is a project which wraps the official bitcoin/c-secp256k1 bitcoin library.
 
-* Take a private key
-`0C28FCA386C7A227600B2FE50B7CAE11EC86D3BF1FBE471BE89827E19D72AA1D`
-* Add a 0x80 byte in front of it for mainnet addresses or 0xef for testnet addresses. Also add a 0x01 byte at the end if the private key will correspond to a compressed public key
-`800C28FCA386C7A227600B2FE50B7CAE11EC86D3BF1FBE471BE89827E19D72AA1D`
-* Perform SHA-256 hash on the extended key
-`8147786C4D15106333BF278D71DADAF1079EF2D2440A4DDE37D747DED5403592`
-* Perform SHA-256 hash on result of SHA-256 hash
-`507A5B8DFED0FC6FE8801743720CEDEC06AA5C6FCA72B07C49964492FB98A714`
-* Take the first 4 bytes of the second SHA-256 hash, this is the checksum
-`507A5B8D`
-* Add the 4 checksum bytes from point 5 at the end of the extended key from point 2
-`800C28FCA386C7A227600B2FE50B7CAE11EC86D3BF1FBE471BE89827E19D72AA1D507A5B8D`
-* Convert the result from a byte string into a base58 string using Base58Check encoding. This is the Wallet Import Format
-`5HueCGU8rMjxEXxiPuD5BDku4MkFqeZyd4dZ1jvhTVqvbTLvyTJ`
+##### https://github.com/tv42/base58
+This library does the bas58 conversion. I have included the base58 project in this codebase rather than importing it from the aforementioned github, because I needed to change the dictionary that was used.
 
-##### Generating a public key from a private key
+### Resources
 
-![](http://i.stack.imgur.com/N93Nn.png)
-
-##### Resources
-
-- https://github.com/tv42/base58 I have included the base58 project in this codebase rather than importing it from the aforementioned github, because I needed to change the dictionary that was used.
 - Ken Shirriff's blog post "Bitcoins the hard way": http://www.righto.com/2014/02/bitcoins-hard-way-using-raw-bitcoin.html
 - The Bitcoin wiki: https://en.bitcoin.it/
 - Bitcoin developer guide: https://bitcoin.org/en/developer-guide
-- TP's TestNet Faucet. This allows you to give yourself BTC on TestNet. http://tpfaucet.appspot.com/ (make sure to send them back when you're done.)
-- http://blockexplorer.com/testnet Has information about transactions on TestNet.
+- http://blockexplorer.com/ for general transction/address searching
+- http://blockchain.info/ for general transction/address searching
+- https://blockchain.info/connected-nodes to see a list of connected nodes
 - bitcoin.stackexchange.com (http://bitcoin.stackexchange.com/questions/3374/how-to-redeem-a-basic-tx) Information on redeeming a raw transaction, and explanation of fields.

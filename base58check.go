@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"crypto/sha256"
 	"encoding/hex"
+	"fmt"
 	"hellobitcoin/base58"
 	"log"
 	"math/big"
@@ -71,7 +72,7 @@ func base58CheckEncode(prefix string, byteData []byte) string {
 func base58CheckDecode(value string) []byte {
 	zeroBytes := 0
 	for i := 0; i < len(value); i++ {
-		if value[i] == 1 {
+		if value[i] == 49 {
 			zeroBytes += 1
 		} else {
 			break
@@ -85,11 +86,10 @@ func base58CheckDecode(value string) []byte {
 
 	encodedChecksum := publicKeyInt.Bytes()
 
-	encoded := encodedChecksum[1 : len(encodedChecksum)-4]
+	encoded := encodedChecksum[0 : len(encodedChecksum)-4]
 
 	var buffer bytes.Buffer
 	for i := 0; i < zeroBytes; i++ {
-		//There must be an easier way to create a 0 byte...
 		zeroByte, err := hex.DecodeString("00")
 		if err != nil {
 			log.Fatal(err)
@@ -99,5 +99,5 @@ func base58CheckDecode(value string) []byte {
 
 	buffer.Write(encoded)
 
-	return buffer.Bytes()
+	return buffer.Bytes()[1:len(buffer.Bytes())]
 }
