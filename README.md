@@ -4,7 +4,7 @@ This is a collection of simple programs which can generate bitcoin wallets, crea
 
 It was a learning project for me to learn more about both golang, and the bitcoin protocol.
 
-This project consists of three main files which each contain the most basic usecase of a major bitcoin components.
+This project consists of three programs which each contain the most basic usecase.
 
 * keys.go - Generates a public/private key pair
 * transaction.go - Creates, and signs a bitcoin transaction
