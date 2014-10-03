@@ -22,7 +22,7 @@ var flagSatoshis int
 
 func main() {
 	//This transaction code is not completely robust.
-	//It expects that you have exactly 1 input transaction, and 1 output transaction.
+	//It expects that you have exactly 1 input transaction, and 1 output address.
 	//It also expects that your transaction is a standard Pay To Public Key Hash (P2PKH) transaction.
 	//This is the most common form used to send a transaction to one or multiple Bitcoin addresses.
 
@@ -37,7 +37,7 @@ func main() {
 	//First we create the raw transaction.
 	//In order to construct the raw transaction we need the input transaction hash,
 	//the destination address, the number of satoshis to send, and the scriptSig
-	//which is temporarily (prior to signing), the ScriptPubKey of the input transaction.
+	//which is temporarily (prior to signing) the ScriptPubKey of the input transaction.
 	tempScriptSig := createScriptPubKey(flagPublicKey)
 
 	rawTransaction := createRawTransaction(flagInputTransaction, flagDestination, flagSatoshis, tempScriptSig)
