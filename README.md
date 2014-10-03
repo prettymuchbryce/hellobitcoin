@@ -65,3 +65,7 @@ This library does the base58 conversion. I have included the base58 project in t
 - http://blockchain.info/ for general transction/address searching
 - https://blockchain.info/connected-nodes to see a list of connected nodes
 - bitcoin.stackexchange.com (http://bitcoin.stackexchange.com/questions/3374/how-to-redeem-a-basic-tx) Information on redeeming a raw transaction, and explanation of fields.
+
+### License
+
+MIT
