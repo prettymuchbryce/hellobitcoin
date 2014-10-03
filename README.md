@@ -12,7 +12,7 @@ This project consists of three programs which each contain the most basic usecas
 
 ###Disclaimer
 
-These programs is not "crytographically" random, and should not be used for any purpose other than educational use.
+These programs are not "crytographically" random, and should not be used for any purpose other than educational use.
 
 ###Installation
 
