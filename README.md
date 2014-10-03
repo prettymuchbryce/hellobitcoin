@@ -48,7 +48,7 @@ These programs is not "crytographically" random, and should not be used for purp
 This library is used for the creation of public keys from private keys, as well as signing transactions. It is a project which wraps the official bitcoin/c-secp256k1 bitcoin library.
 
 ##### https://github.com/tv42/base58
-This library does the bas58 conversion. I have included the base58 project in this codebase rather than importing it from the aforementioned github, because I needed to change the dictionary that was used.
+This library does the base58 conversion. I have included the base58 project in this codebase rather than importing it from the aforementioned github, because I needed to change the dictionary that was used.
 
 ### Resources
 
