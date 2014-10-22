@@ -4,8 +4,7 @@ import (
 	"bytes"
 	"crypto/sha256"
 	"encoding/hex"
-	"fmt"
-	"hellobitcoin/base58"
+	"github.com/prettymuchbryce/hellobitcoin/base58"
 	"log"
 	"math/big"
 )
