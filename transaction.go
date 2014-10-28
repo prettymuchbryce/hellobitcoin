@@ -7,11 +7,12 @@ import (
 	"encoding/hex"
 	"flag"
 	"fmt"
-	secp256k1 "github.com/toxeus/go-secp256k1"
 	"log"
 	"math"
 	"math/rand"
 	"time"
+
+	secp256k1 "github.com/toxeus/go-secp256k1"
 )
 
 var flagPrivateKey string
@@ -27,11 +28,11 @@ func main() {
 	//This is the most common form used to send a transaction to one or multiple Bitcoin addresses.
 
 	//Parse flags
-	flag.StringVar(&flagPrivateKey, "private-key", "", "")
-	flag.StringVar(&flagPublicKey, "public-key", "", "")
-	flag.StringVar(&flagDestination, "destination", "", "")
-	flag.StringVar(&flagInputTransaction, "input-transaction", "", "")
-	flag.IntVar(&flagSatoshis, "satoshis", 0, "")
+	flag.StringVar(&flagPrivateKey, "private-key", "", "Private key of Bitcoin to send.")
+	flag.StringVar(&flagPublicKey, "public-key", "", "Public key of Bitcoin to send.")
+	flag.StringVar(&flagDestination, "destination", "", "Destination address to send Bitcoin.")
+	flag.StringVar(&flagInputTransaction, "input-transaction", "", "Previous transaction hash of Bitcoin to send.")
+	flag.IntVar(&flagSatoshis, "satoshis", 0, "Amount of Bitcoin to send in Satoshis (100,000,000 Satoshi = 1 Bitcoin).")
 	flag.Parse()
 
 	//First we create the raw transaction.
