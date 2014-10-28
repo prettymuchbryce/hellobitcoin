@@ -28,11 +28,11 @@ func main() {
 	//This is the most common form used to send a transaction to one or multiple Bitcoin addresses.
 
 	//Parse flags
-	flag.StringVar(&flagPrivateKey, "private-key", "", "Private key of Bitcoin to send.")
-	flag.StringVar(&flagPublicKey, "public-key", "", "Public key of Bitcoin to send.")
-	flag.StringVar(&flagDestination, "destination", "", "Destination address to send Bitcoin.")
-	flag.StringVar(&flagInputTransaction, "input-transaction", "", "Previous transaction hash of Bitcoin to send.")
-	flag.IntVar(&flagSatoshis, "satoshis", 0, "Amount of Bitcoin to send in Satoshis (100,000,000 Satoshi = 1 Bitcoin).")
+	flag.StringVar(&flagPrivateKey, "private-key", "", "Private key of bitcoin to send.")
+	flag.StringVar(&flagPublicKey, "public-key", "", "Public address of bitcoin to send.")
+	flag.StringVar(&flagDestination, "destination", "", "Destination address to send bitcoin.")
+	flag.StringVar(&flagInputTransaction, "input-transaction", "", "Input transaction hash of bitcoin to send.")
+	flag.IntVar(&flagSatoshis, "satoshis", 0, "Amount of bitcoin to send in satoshi (100,000,000 satoshi = 1 bitcoin).")
 	flag.Parse()
 
 	//First we create the raw transaction.
