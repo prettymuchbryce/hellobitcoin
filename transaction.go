@@ -7,17 +7,19 @@ import (
 	"encoding/hex"
 	"flag"
 	"fmt"
-	secp256k1 "github.com/toxeus/go-secp256k1"
 	"log"
 	"math"
 	"math/rand"
 	"time"
+
+	secp256k1 "github.com/toxeus/go-secp256k1"
 )
 
 var flagPrivateKey string
 var flagPublicKey string
 var flagDestination string
 var flagInputTransaction string
+var flagInputIndex int
 var flagSatoshis int
 
 func main() {
@@ -30,7 +32,8 @@ func main() {
 	flag.StringVar(&flagPrivateKey, "private-key", "", "The private key of the bitcoin wallet which contains the bitcoins you wish to send.")
 	flag.StringVar(&flagPublicKey, "public-key", "", "The public address of the bitcoin wallet which contains the bitcoins you wish to send.")
 	flag.StringVar(&flagDestination, "destination", "", "The public address of the bitcoin wallet to which you wish to send the bitcoins.")
-	flag.StringVar(&flagInputTransaction, "input-transaction", "", "An unpsent input transaction hash which contains the bitcoins you wish to send. (Note: HelloBitcoin assumes a single input transaction, and a single output transaction for simplicity.)")
+	flag.StringVar(&flagInputTransaction, "input-transaction", "", "An unspent input transaction hash which contains the bitcoins you wish to send. (Note: HelloBitcoin assumes a single input transaction, and a single output transaction for simplicity.)")
+	flag.IntVar(&flagInputIndex, "input-index", 0, "The output index of the unspent input transaction which contains the bitcoins you wish to send. Defaults to 0 (first index).")
 	flag.IntVar(&flagSatoshis, "satoshis", 0, "The number of bitcoins you wish to send as represented in satoshis (100,000,000 satoshis = 1 bitcoin). (Important note: the number of satoshis left unspent in your input transaction will be spent as the transaction fee.)")
 	flag.Parse()
 
@@ -40,7 +43,7 @@ func main() {
 	//which is temporarily (prior to signing) the ScriptPubKey of the input transaction.
 	tempScriptSig := createScriptPubKey(flagPublicKey)
 
-	rawTransaction := createRawTransaction(flagInputTransaction, flagDestination, flagSatoshis, tempScriptSig)
+	rawTransaction := createRawTransaction(flagInputTransaction, flagInputIndex, flagDestination, flagSatoshis, tempScriptSig)
 
 	//After completing the raw transaction, we append
 	//SIGHASH_ALL in little-endian format to the end of the raw transaction.
@@ -137,7 +140,7 @@ func signRawTransaction(rawTransaction []byte, privateKeyBase58 string) []byte {
 	scriptSig := buffer.Bytes()
 
 	//Return the final transaction
-	return createRawTransaction(flagInputTransaction, flagDestination, flagSatoshis, scriptSig)
+	return createRawTransaction(flagInputTransaction, flagInputIndex, flagDestination, flagSatoshis, scriptSig)
 }
 
 func generateNonce() [32]byte {
@@ -154,7 +157,7 @@ func randInt(min int, max int) uint8 {
 	return uint8(min + rand.Intn(max-min))
 }
 
-func createRawTransaction(inputTransactionHash string, publicKeyBase58Destination string, satoshis int, scriptSig []byte) []byte {
+func createRawTransaction(inputTransactionHash string, inputTransactionIndex int, publicKeyBase58Destination string, satoshis int, scriptSig []byte) []byte {
 	//Create the raw transaction.
 
 	//Version field
@@ -181,11 +184,9 @@ func createRawTransaction(inputTransactionHash string, publicKeyBase58Destinatio
 		inputTransactionBytesReversed[i] = inputTransactionBytes[len(inputTransactionBytes)-i-1]
 	}
 
-	//Ouput index of input transaction
-	outputIndex, err := hex.DecodeString("00000000")
-	if err != nil {
-		log.Fatal(err)
-	}
+	//Output index of input transaction
+	outputIndexBytes := make([]byte, 4)
+	binary.LittleEndian.PutUint32(outputIndexBytes, uint32(inputTransactionIndex))
 
 	//Script sig length
 	scriptSigLength := len(scriptSig)
@@ -220,7 +221,7 @@ func createRawTransaction(inputTransactionHash string, publicKeyBase58Destinatio
 	buffer.Write(version)
 	buffer.Write(inputs)
 	buffer.Write(inputTransactionBytesReversed)
-	buffer.Write(outputIndex)
+	buffer.Write(outputIndexBytes)
 	buffer.WriteByte(byte(scriptSigLength))
 	buffer.Write(scriptSig)
 	buffer.Write(sequence)
