@@ -27,11 +27,11 @@ func main() {
 	//This is the most common form used to send a transaction to one or multiple Bitcoin addresses.
 
 	//Parse flags
-	flag.StringVar(&flagPrivateKey, "private-key", "", "")
-	flag.StringVar(&flagPublicKey, "public-key", "", "")
-	flag.StringVar(&flagDestination, "destination", "", "")
-	flag.StringVar(&flagInputTransaction, "input-transaction", "", "")
-	flag.IntVar(&flagSatoshis, "satoshis", 0, "")
+	flag.StringVar(&flagPrivateKey, "private-key", "", "The private key of the bitcoin wallet which contains the bitcoins you wish to send.")
+	flag.StringVar(&flagPublicKey, "public-key", "", "The public address of the bitcoin wallet which contains the bitcoins you wish to send.")
+	flag.StringVar(&flagDestination, "destination", "", "The public address of the bitcoin wallet to which you wish to send the bitcoins.")
+	flag.StringVar(&flagInputTransaction, "input-transaction", "", "An unpsent input transaction hash which contains the bitcoins you wish to send. (Note: HelloBitcoin assumes a single input transaction, and a single output transaction for simplicity.)")
+	flag.IntVar(&flagSatoshis, "satoshis", 0, "The number of bitcoins you wish to send as represented in satoshis (100,000,000 satoshis = 1 bitcoin). (Important note: the number of satoshis left unspent in your input transaction will be spent as the transaction fee.)")
 	flag.Parse()
 
 	//First we create the raw transaction.
