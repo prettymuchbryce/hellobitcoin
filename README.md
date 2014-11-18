@@ -25,14 +25,14 @@ These programs are not "crytographically" random, and should not be used for any
 
 ##### Creating a key pair
 
-	go run keys.go base58check.go
+	go run keys.go
 
 	options (optional)
 	--testnet
 
 ##### Generating a transaction
 
-	go run transaction.go base58check.go
+	go run transaction.go
 	
 	options (required)
 	--private-key yourPrivateKey

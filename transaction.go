@@ -12,6 +12,7 @@ import (
 	"math/rand"
 	"time"
 
+	"github.com/prettymuchbryce/hellobitcoin/base58check"
 	secp256k1 "github.com/toxeus/go-secp256k1"
 )
 
@@ -66,7 +67,7 @@ func main() {
 }
 
 func createScriptPubKey(publicKeyBase58 string) []byte {
-	publicKeyBytes := base58CheckDecode(publicKeyBase58)
+	publicKeyBytes := base58check.Decode(publicKeyBase58)
 
 	var scriptPubKey bytes.Buffer
 	scriptPubKey.WriteByte(byte(118))                 //OP_DUP
@@ -82,7 +83,7 @@ func signRawTransaction(rawTransaction []byte, privateKeyBase58 string) []byte {
 	//Here we start the process of signing the raw transaction.
 
 	secp256k1.Start()
-	privateKeyBytes := base58CheckDecode(privateKeyBase58)
+	privateKeyBytes := base58check.Decode(privateKeyBase58)
 	var privateKeyBytes32 [32]byte
 
 	for i := 0; i < 32; i++ {
