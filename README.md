@@ -31,12 +31,15 @@ These programs are not "crytographically" random, and should not be used for any
 
 	go run transaction.go base58check.go
 	
-	options (all are required)
+	options (required)
 	--private-key yourPrivateKey
 	--public-key yourPublicKey
 	--destination destinationPublicKey
 	--input-transaction inputTransactionHash
 	--satoshis satoshisToSend
+
+	options (optional)
+	--input-index inputTransactionIndex
 
 
 ##### Sending a transaction over the bitcoin network
