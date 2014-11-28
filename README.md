@@ -27,6 +27,9 @@ These programs are not "crytographically" random, and should not be used for any
 
 	go run keys.go base58check.go
 
+	options (optional)
+	--testnet
+
 ##### Generating a transaction
 
 	go run transaction.go base58check.go
@@ -46,10 +49,13 @@ These programs are not "crytographically" random, and should not be used for any
 
 	go run network.go
 	
-	options (all are required)
+	options (required)
 	--transaction yourTransaction
 	--node-address 255.255.255.255 (IPv4 address of the bitcoin node to connect to)
 	--network-address 255.255.255.255 (IPv4 address of your public IP address)
+
+	options (optional)
+	--testnet
 
 ### Dependencies
 
@@ -61,6 +67,8 @@ This library does the base58 conversion. I have included the base58 project in t
 
 ### Resources
 
+- Bitpay's insight for testnet: https://test-insight.bitpay.com/
+- TP's TestNet Faucet: http://tpfaucet.appspot.com/
 - Ken Shirriff's blog post "Bitcoins the hard way": http://www.righto.com/2014/02/bitcoins-hard-way-using-raw-bitcoin.html
 - The Bitcoin wiki: https://en.bitcoin.it/
 - Bitcoin developer guide: https://bitcoin.org/en/developer-guide

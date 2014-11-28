@@ -8,10 +8,27 @@ import (
 	"log"
 	"math"
 	"math/rand"
+	"flag"
 	"time"
 )
 
+var flagTestnet bool
+
 func main() {
+	flag.BoolVar(&flagTestnet, "testnet", false, "Whether or not to use the bitcoin testnet. (optional, defaults false)")
+	flag.Parse()
+
+	var privateKeyPrefix string
+	var publicKeyPrefix string
+
+	if flagTestnet {
+		privateKeyPrefix = "EF"
+		publicKeyPrefix = "6F"
+	} else {
+		privateKeyPrefix = "80"
+		publicKeyPrefix = "00"
+	}
+
 	//BTC private key is 256 bits of "random" data.
 	privateKey := generatePrivateKey()
 
@@ -33,7 +50,7 @@ func main() {
 	//Convert the extended private key to a big Int
 	//Encoded the big int extended private key into a Base58Checked string
 
-	privateKeyWif := base58CheckEncode("80", privateKey)
+	privateKeyWif := base58CheckEncode(privateKeyPrefix, privateKey)
 
 	publicKey := generatePublicKey(privateKey)
 
@@ -41,7 +58,7 @@ func main() {
 	//This is known as the Network ID Byte, or the version byte
 	//6f is the testnet prefix
 	//00 is the mainnet prefix
-	publicKeyEncoded := base58CheckEncode("00", publicKey)
+	publicKeyEncoded := base58CheckEncode(publicKeyPrefix, publicKey)
 
 	//Print the keys
 	fmt.Println("Your private key is")

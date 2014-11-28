@@ -19,7 +19,8 @@ import (
 var flagNodeAddress string
 var flagNetworkAddress string
 var flagTransaction string
-var magicBytes string = "f9beb4d9"
+var flagTestnet bool
+var magicBytes string
 
 func main() {
 	//Everything is done at the byte level, and most all network messages
@@ -29,11 +30,22 @@ func main() {
 	flag.StringVar(&flagTransaction, "transaction", "", "")
 	flag.StringVar(&flagNetworkAddress, "network-address", "", "")
 	flag.StringVar(&flagNodeAddress, "node-address", "", "")
+	flag.BoolVar(&flagTestnet, "testnet", false, "Whether or not to use the bitcoin testnet. Defaults to false")
 	flag.Parse()
+
+	var port string
+
+	if flagTestnet {
+		magicBytes = "0b110907"
+		port = ":18333"
+	} else {
+		magicBytes = "f9beb4d9"
+		port = ":8333"
+	}
 
 	bufaddr := new(bytes.Buffer)
 	bufaddr.WriteString(flagNodeAddress)
-	bufaddr.WriteString(":8333")
+	bufaddr.WriteString(port)
 
 	//Attempt to connect to the node
 	servAddr := bufaddr.String()
