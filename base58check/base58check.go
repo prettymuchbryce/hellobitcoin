@@ -1,15 +1,16 @@
-package main
+package base58check
 
 import (
 	"bytes"
 	"crypto/sha256"
 	"encoding/hex"
-	"github.com/prettymuchbryce/hellobitcoin/base58"
 	"log"
 	"math/big"
+
+	"github.com/prettymuchbryce/hellobitcoin/base58check/base58"
 )
 
-func base58CheckEncode(prefix string, byteData []byte) string {
+func Encode(prefix string, byteData []byte) string {
 	prefixBytes, err := hex.DecodeString(prefix)
 	if err != nil {
 		log.Fatal(err)
@@ -68,7 +69,7 @@ func base58CheckEncode(prefix string, byteData []byte) string {
 	return buffer.String()
 }
 
-func base58CheckDecode(value string) []byte {
+func Decode(value string) []byte {
 	zeroBytes := 0
 	for i := 0; i < len(value); i++ {
 		if value[i] == 49 {

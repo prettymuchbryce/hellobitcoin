@@ -1,15 +1,17 @@
 package main
 
 import (
-	"code.google.com/p/go.crypto/ripemd160"
 	"crypto/sha256"
+	"flag"
 	"fmt"
-	secp256k1 "github.com/toxeus/go-secp256k1"
 	"log"
 	"math"
 	"math/rand"
-	"flag"
 	"time"
+
+	"code.google.com/p/go.crypto/ripemd160"
+	"github.com/prettymuchbryce/hellobitcoin/base58check"
+	secp256k1 "github.com/toxeus/go-secp256k1"
 )
 
 var flagTestnet bool
@@ -50,15 +52,15 @@ func main() {
 	//Convert the extended private key to a big Int
 	//Encoded the big int extended private key into a Base58Checked string
 
-	privateKeyWif := base58CheckEncode(privateKeyPrefix, privateKey)
-
+	privateKeyWif := base58check.Encode(privateKeyPrefix, privateKey)
 	publicKey := generatePublicKey(privateKey)
 
 	//There is also a prefix on the public key
 	//This is known as the Network ID Byte, or the version byte
 	//6f is the testnet prefix
 	//00 is the mainnet prefix
-	publicKeyEncoded := base58CheckEncode(publicKeyPrefix, publicKey)
+
+	publicKeyEncoded := base58check.Encode(publicKeyPrefix, publicKey)
 
 	//Print the keys
 	fmt.Println("Your private key is")
