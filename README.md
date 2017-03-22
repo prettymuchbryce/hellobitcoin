@@ -1,4 +1,4 @@
-###Overview
+### Overview
 
 This is a collection of simple programs which can generate bitcoin wallets, create and sign transactions, and send transactions over the bitcoin network.
 
@@ -10,11 +10,11 @@ This project consists of three programs which each contain the most basic usecas
 * transaction.go - Creates, and signs a bitcoin transaction
 * network.go - Connects to a peer, and sends a transaction over the network
 
-###Disclaimer
+### Disclaimer
 
 These programs are not "crytographically" random, and should not be used for any purpose other than educational use.
 
-###Installation
+### Installation
 
 1. Install [go](http://golang.org/)
 2. run `go get` to install dependencies
